@@ -1,0 +1,103 @@
+Original source: https://tools.suckless.org/dmenu/patches/separator/
+---
+diff --git a/dmenu.1 b/dmenu.1
+index c48ae24..b89889f 100644
+--- a/dmenu.1
++++ b/dmenu.1
+@@ -30,6 +30,10 @@ dmenu \- dynamic menu
+ .IR color ]
+ .RB [ \-w
+ .IR windowid ]
++.RB [ \-d
++.IR separator ]
++.RB [ \-D
++.IR separator ]
+ .P
+ .BR dmenu_run " ..."
+ .SH DESCRIPTION
+@@ -109,6 +113,14 @@ prints version information to stdout, then exits.
+ .TP
+ .BI \-w " windowid"
+ embed into windowid.
++.TP
++.BI \-d " separator"
++separate the input into two halves on the first occurrence of the given charcter.
++Display only the first half in dmenu and print the second half to stdout upon selection.
++Appending '|' to the separator reverses the display/printing order.
++.TP
++.BI \-D " separator"
++same as \-d but separate based on the last occurrence.
+ .SH USAGE
+ dmenu is completely controlled by the keyboard.  Items are selected using the
+ arrow keys, page up, page down, home, and end.
+diff --git a/dmenu.c b/dmenu.c
+index 44b5147..e0de6f7 100644
+--- a/dmenu.c
++++ b/dmenu.c
+@@ -30,12 +30,16 @@ enum { SchemeNorm, SchemeSel, SchemeOut, SchemeLast }; /* color schemes */
+ 
+ struct item {
+ 	char *text;
++	char *text_output;
+ 	struct item *left, *right;
+ 	int out;
+ };
+ 
+ static char text[BUFSIZ] = "";
+ static char *embed;
++static char separator;
++static int separator_greedy;
++static int separator_reverse;
+ static int bh, mw, mh;
+ static int dmx = 0; /* put dmenu at this x offset */
+ static int dmy = 0; /* put dmenu at this y offset (measured from the bottom if topbar is 0) */
+@@ -467,7 +471,7 @@ insert:
+ 		break;
+ 	case XK_Return:
+ 	case XK_KP_Enter:
+-		puts((sel && !(ev->state & ShiftMask)) ? sel->text : text);
++		puts((sel && !(ev->state & ShiftMask)) ? sel->text_output : text);
+ 		if (!(ev->state & ControlMask)) {
+ 			cleanup();
+ 			exit(0);
+@@ -537,6 +541,18 @@ readstdin(void)
+ 			*p = '\0';
+ 		if (!(items[i].text = strdup(buf)))
+ 			die("cannot strdup %u bytes:", strlen(buf) + 1);
++		if (separator && (p = separator_greedy ?
++		    strrchr(items[i].text, separator) : strchr(items[i].text, separator))) {
++			*p = '\0';
++			items[i].text_output = ++p;
++		} else {
++			items[i].text_output = items[i].text;
++		}
++		if (separator_reverse) {
++			p = items[i].text;
++			items[i].text = items[i].text_output;
++			items[i].text_output = p;
++		}
+ 		items[i].out = 0;
+ 		drw_font_getexts(drw->fonts, buf, strlen(buf), &tmpmax, NULL);
+ 		if (tmpmax > inputw) {
+@@ -695,7 +711,8 @@ usage(void)
+ {
+ 	fputs("usage: dmenu [-bfiv] [-l lines] [-h height] [-p prompt] [-fn font] [-m monitor]\n"
+ 	      "             [-x xoffset] [-y yoffset] [-z width]\n"
+-	      "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]\n", stderr);
++	      "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]\n"
++	      "             [-d separator] [-D separator]\n", stderr);
+ 	exit(1);
+ }
+ 
+@@ -748,6 +765,11 @@ main(int argc, char *argv[])
+ 			colors[SchemeSel][ColFg] = argv[++i];
+ 		else if (!strcmp(argv[i], "-w"))   /* embedding window id */
+ 			embed = argv[++i];
++		else if (!strcmp(argv[i], "-d") || /* field separator */
++		         (separator_greedy = !strcmp(argv[i], "-D"))) {
++			separator = argv[++i][0];
++			separator_reverse = argv[i][1] == '|';
++		}
+ 		else
+ 			usage();
+ 

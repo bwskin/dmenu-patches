@@ -1,0 +1,67 @@
+By me: My favourite theme by default
+---
+diff --git a/config.def.h b/config.def.h
+index c85566f..d66435a 100644
+--- a/config.def.h
++++ b/config.def.h
+@@ -5,19 +5,19 @@ static int topbar = 1;                      /* -b  option; if 0, dmenu appears a
+ static int fuzzy = 1;                      /* -F  option; if 0, dmenu doesn't use fuzzy matching     */
+ /* -fn option overrides fonts[0]; default X11 font or font set */
+ static const char *fonts[] = {
+-	"monospace:size=10"
++    "System San Francisco:size=20"
+ };
+ static const char *prompt      = NULL;      /* -p  option; prompt to the left of input field */
+ static const char *colors[SchemeLast][2] = {
+ 	/*     fg         bg       */
+-	[SchemeNorm] = { "#bbbbbb", "#222222" },
+-	[SchemeSel] = { "#eeeeee", "#005577" },
++	[SchemeNorm] = { "#bbbbbb", "#220845" },
++	[SchemeSel] = { "#eeeeee", "#3a136e" },
+ 	[SchemeOut] = { "#000000", "#00ffff" },
+ };
+ /* -l option; if nonzero, dmenu uses vertical list with given number of lines */
+-static unsigned int lines      = 0;
++static unsigned int lines      = 5;
+ /* -h option; minimum height of a menu line */
+-static unsigned int lineheight = 0;
++static unsigned int lineheight = 60;
+ static unsigned int min_lineheight = 8;
+ 
+ /*
+diff --git a/dmenu.c b/dmenu.c
+index 8925a39..6376dad 100644
+--- a/dmenu.c
++++ b/dmenu.c
+@@ -45,7 +45,7 @@ static int separator_reverse;
+ static int bh, mw, mh;
+ static int dmx = 0; /* put dmenu at this x offset */
+ static int dmy = 0; /* put dmenu at this y offset (measured from the bottom if topbar is 0) */
+-static unsigned int dmw = 0; /* make dmenu this wide */
++static unsigned int dmw = 600; /* make dmenu this wide */
+ static int inputw = 0, promptw, passwd = 0;
+ static int lrpad; /* sum of left and right padding */
+ static size_t cursor;
+@@ -53,10 +53,10 @@ static struct item *items = NULL;
+ static struct item *matches, *matchend;
+ static struct item *prev, *curr, *next, *sel;
+ static int mon = -1, screen;
+-static int lines_below_prompt = 0;
+-static int password_height_offset = 0;
++static int lines_below_prompt = 1;
++static int password_height_offset = 40;
+ static int no_options = 0;
+-static int center = 0;
++static int center = 1;
+ 
+ static Atom clip, utf8;
+ static Display *dpy;
+@@ -877,7 +877,7 @@ main(int argc, char *argv[])
+ 		else if (!strcmp(argv[i], "-m"))
+ 			mon = atoi(argv[++i]);
+ 		else if (!strcmp(argv[i], "-p"))   /* adds prompt to left of input field */
+-			prompt = argv[++i];
++			prompt = strcat(argv[++i], " ");
+ 		else if (!strcmp(argv[i], "-fn"))  /* font or font set */
+ 			fonts[0] = argv[++i];
+ 		else if (!strcmp(argv[i], "-nb"))  /* normal background color */
