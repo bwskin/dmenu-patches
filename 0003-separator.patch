@@ -1,5 +1,14 @@
+From 71acac7288d404dfa26a06c296abf1a17b9b0a4c Mon Sep 17 00:00:00 2001
+From: naoto <nnomura98@gmail.com>
+Date: Tue, 11 Oct 2022 14:24:41 +0200
+Subject: [PATCH 03/10] separator
+
 Original source: https://tools.suckless.org/dmenu/patches/separator/
 ---
+ dmenu.1 | 12 ++++++++++++
+ dmenu.c | 31 +++++++++++++++++++++++++++----
+ 2 files changed, 39 insertions(+), 4 deletions(-)
+
 diff --git a/dmenu.1 b/dmenu.1
 index c48ae24..b89889f 100644
 --- a/dmenu.1
@@ -31,10 +40,10 @@ index c48ae24..b89889f 100644
  dmenu is completely controlled by the keyboard.  Items are selected using the
  arrow keys, page up, page down, home, and end.
 diff --git a/dmenu.c b/dmenu.c
-index 44b5147..e0de6f7 100644
+index 8464be6..00fdfd4 100644
 --- a/dmenu.c
 +++ b/dmenu.c
-@@ -30,12 +30,16 @@ enum { SchemeNorm, SchemeSel, SchemeOut, SchemeLast }; /* color schemes */
+@@ -30,12 +30,15 @@ enum { SchemeNorm, SchemeSel, SchemeOut, SchemeLast }; /* color schemes */
  
  struct item {
  	char *text;
@@ -45,13 +54,21 @@ index 44b5147..e0de6f7 100644
  
  static char text[BUFSIZ] = "";
  static char *embed;
-+static char separator;
-+static int separator_greedy;
-+static int separator_reverse;
++static char separator, separator_reverse;
++static char * (*sepchr)(const char *, int);
  static int bh, mw, mh;
  static int dmx = 0; /* put dmenu at this x offset */
  static int dmy = 0; /* put dmenu at this y offset (measured from the bottom if topbar is 0) */
-@@ -467,7 +471,7 @@ insert:
+@@ -108,7 +111,7 @@ cleanup(void)
+ 	for (i = 0; i < SchemeLast; i++)
+ 		free(scheme[i]);
+ 	for (i = 0; items && items[i].text; ++i)
+-		free(items[i].text);
++		free(separator_reverse ? items[i].text_output : items[i].text);
+ 	free(items);
+ 	drw_free(drw);
+ 	XSync(dpy, False);
+@@ -493,7 +496,7 @@ insert:
  		break;
  	case XK_Return:
  	case XK_KP_Enter:
@@ -60,12 +77,21 @@ index 44b5147..e0de6f7 100644
  		if (!(ev->state & ControlMask)) {
  			cleanup();
  			exit(0);
-@@ -537,6 +541,18 @@ readstdin(void)
- 			*p = '\0';
- 		if (!(items[i].text = strdup(buf)))
- 			die("cannot strdup %u bytes:", strlen(buf) + 1);
-+		if (separator && (p = separator_greedy ?
-+		    strrchr(items[i].text, separator) : strchr(items[i].text, separator))) {
+@@ -552,7 +555,7 @@ paste(void)
+ static void
+ readstdin(void)
+ {
+-	char *line = NULL;
++	char *p, *line = NULL;
+ 	size_t i, junk, size = 0;
+ 	ssize_t len;
+ 
+@@ -564,6 +567,19 @@ readstdin(void)
+ 		if (line[len - 1] == '\n')
+ 			line[len - 1] = '\0';
+ 		items[i].text = line;
++
++		if (separator && (p = sepchr(items[i].text, separator)) != NULL) {
 +			*p = '\0';
 +			items[i].text_output = ++p;
 +		} else {
@@ -76,28 +102,33 @@ index 44b5147..e0de6f7 100644
 +			items[i].text = items[i].text_output;
 +			items[i].text_output = p;
 +		}
++
  		items[i].out = 0;
- 		drw_font_getexts(drw->fonts, buf, strlen(buf), &tmpmax, NULL);
- 		if (tmpmax > inputw) {
-@@ -695,7 +711,8 @@ usage(void)
+ 	}
+ 	if (items)
+@@ -716,7 +732,8 @@ usage(void)
  {
- 	fputs("usage: dmenu [-bfiv] [-l lines] [-h height] [-p prompt] [-fn font] [-m monitor]\n"
- 	      "             [-x xoffset] [-y yoffset] [-z width]\n"
--	      "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]\n", stderr);
-+	      "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]\n"
-+	      "             [-d separator] [-D separator]\n", stderr);
- 	exit(1);
+ 	die("usage: dmenu [-bfiv] [-l lines] [-h height] [-p prompt] [-fn font] [-m monitor]\n"
+ 	    "             [-x xoffset] [-y yoffset] [-z width]\n"
+-	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]");
++	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]\n"
++	    "             [-d separator] [-D separator]");
  }
  
-@@ -748,6 +765,11 @@ main(int argc, char *argv[])
+ int
+@@ -768,6 +785,12 @@ main(int argc, char *argv[])
  			colors[SchemeSel][ColFg] = argv[++i];
  		else if (!strcmp(argv[i], "-w"))   /* embedding window id */
  			embed = argv[++i];
 +		else if (!strcmp(argv[i], "-d") || /* field separator */
-+		         (separator_greedy = !strcmp(argv[i], "-D"))) {
++		         !strcmp(argv[i], "-D")) {
++			sepchr = argv[i][1] == 'D' ? strrchr : strchr;
 +			separator = argv[++i][0];
 +			separator_reverse = argv[i][1] == '|';
 +		}
  		else
  			usage();
  
+-- 
+2.38.0
+

@@ -1,5 +1,14 @@
+From ca63bf8360259124dbc8d008700d26fdf953d78d Mon Sep 17 00:00:00 2001
+From: naoto <nnomura98@gmail.com>
+Date: Tue, 11 Oct 2022 14:18:34 +0200
+Subject: [PATCH 02/10] xyw
+
 Original source: https://tools.suckless.org/dmenu/patches/xyw/
 ---
+ dmenu.1 | 24 ++++++++++++++++++++++++
+ dmenu.c | 22 ++++++++++++++++------
+ 2 files changed, 40 insertions(+), 6 deletions(-)
+
 diff --git a/dmenu.1 b/dmenu.1
 index f2a82b4..c48ae24 100644
 --- a/dmenu.1
@@ -43,7 +52,7 @@ index f2a82b4..c48ae24 100644
  defines the prompt to be displayed to the left of the input field.
  .TP
 diff --git a/dmenu.c b/dmenu.c
-index f2a4047..44b5147 100644
+index 5e694ec..8464be6 100644
 --- a/dmenu.c
 +++ b/dmenu.c
 @@ -37,6 +37,9 @@ struct item {
@@ -56,8 +65,8 @@ index f2a4047..44b5147 100644
  static int inputw = 0, promptw;
  static int lrpad; /* sum of left and right padding */
  static size_t cursor;
-@@ -638,9 +641,9 @@ setup(void)
- 				if (INTERSECT(x, y, 1, 1, info[i]))
+@@ -659,9 +662,9 @@ setup(void)
+ 				if (INTERSECT(x, y, 1, 1, info[i]) != 0)
  					break;
  
 -		x = info[i].x_org;
@@ -69,7 +78,7 @@ index f2a4047..44b5147 100644
  		XFree(info);
  	} else
  #endif
-@@ -648,9 +651,9 @@ setup(void)
+@@ -669,9 +672,9 @@ setup(void)
  		if (!XGetWindowAttributes(dpy, parentwin, &wa))
  			die("could not get embedding window attributes: 0x%lx",
  			    parentwin);
@@ -81,16 +90,16 @@ index f2a4047..44b5147 100644
 +		mw = (dmw>0 ? dmw : wa.width);
  	}
  	promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
- 	inputw = MIN(inputw, mw/3);
-@@ -691,6 +694,7 @@ static void
+ 	inputw = mw / 3; /* input width: ~33% of monitor width */
+@@ -712,6 +715,7 @@ static void
  usage(void)
  {
- 	fputs("usage: dmenu [-bfiv] [-l lines] [-h height] [-p prompt] [-fn font] [-m monitor]\n"
-+	      "             [-x xoffset] [-y yoffset] [-z width]\n"
- 	      "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]\n", stderr);
- 	exit(1);
+ 	die("usage: dmenu [-bfiv] [-l lines] [-h height] [-p prompt] [-fn font] [-m monitor]\n"
++	    "             [-x xoffset] [-y yoffset] [-z width]\n"
+ 	    "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]");
  }
-@@ -718,6 +722,12 @@ main(int argc, char *argv[])
+ 
+@@ -738,6 +742,12 @@ main(int argc, char *argv[])
  		/* these options take one argument */
  		else if (!strcmp(argv[i], "-l"))   /* number of lines in vertical list */
  			lines = atoi(argv[++i]);
@@ -103,3 +112,6 @@ index f2a4047..44b5147 100644
  		else if (!strcmp(argv[i], "-h")) { /* minimum height of one menu line */
  			lineheight = atoi(argv[++i]);
  			lineheight = MAX(lineheight, min_lineheight);
+-- 
+2.38.0
+

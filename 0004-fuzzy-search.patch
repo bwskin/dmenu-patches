@@ -1,5 +1,15 @@
+From 7c08e13353d874a693fe59886d544d6b3c228496 Mon Sep 17 00:00:00 2001
+From: naoto <nnomura98@gmail.com>
+Date: Tue, 11 Oct 2022 14:26:01 +0200
+Subject: [PATCH 04/10] fuzzy search
+
 Original source: https://tools.suckless.org/dmenu/patches/fuzzymatch/
 ---
+ config.def.h |  1 +
+ config.mk    |  2 +-
+ dmenu.c      | 89 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 91 insertions(+), 1 deletion(-)
+
 diff --git a/config.def.h b/config.def.h
 index 4394dec..c85566f 100644
 --- a/config.def.h
@@ -13,10 +23,10 @@ index 4394dec..c85566f 100644
  static const char *fonts[] = {
  	"monospace:size=10"
 diff --git a/config.mk b/config.mk
-index 05d5a3e..0c84121 100644
+index 566348b..fd6ff05 100644
 --- a/config.mk
 +++ b/config.mk
-@@ -20,7 +20,7 @@ FREETYPEINC = /usr/include/freetype2
+@@ -21,7 +21,7 @@ FREETYPEINC = /usr/include/freetype2
  
  # includes and libs
  INCS = -I$(X11INC) -I$(FREETYPEINC)
@@ -26,7 +36,7 @@ index 05d5a3e..0c84121 100644
  # flags
  CPPFLAGS = -D_DEFAULT_SOURCE -D_BSD_SOURCE -D_XOPEN_SOURCE=700 -D_POSIX_C_SOURCE=200809L -DVERSION=\"$(VERSION)\" $(XINERAMAFLAGS)
 diff --git a/dmenu.c b/dmenu.c
-index e0de6f7..17256e8 100644
+index 00fdfd4..1eff3de 100644
 --- a/dmenu.c
 +++ b/dmenu.c
 @@ -1,6 +1,7 @@
@@ -45,7 +55,7 @@ index e0de6f7..17256e8 100644
  };
  
  static char text[BUFSIZ] = "";
-@@ -217,9 +219,94 @@ grabkeyboard(void)
+@@ -233,9 +235,94 @@ grabkeyboard(void)
  	die("cannot grab keyboard");
  }
  
@@ -140,7 +150,7 @@ index e0de6f7..17256e8 100644
  	static char **tokv = NULL;
  	static int tokn = 0;
  
-@@ -731,6 +818,8 @@ main(int argc, char *argv[])
+@@ -751,6 +838,8 @@ main(int argc, char *argv[])
  			topbar = 0;
  		else if (!strcmp(argv[i], "-f"))   /* grabs keyboard before reading stdin */
  			fast = 1;
@@ -149,3 +159,6 @@ index e0de6f7..17256e8 100644
  		else if (!strcmp(argv[i], "-i")) { /* case-insensitive item matching */
  			fstrncmp = strncasecmp;
  			fstrstr = cistrstr;
+-- 
+2.38.0
+
